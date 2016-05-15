@@ -166,10 +166,18 @@ int fordFulkersen(Node *start, Node *sink){
     int flow = 0;
     int pathFlow = INT_MAX;
     stack<Vertex*> v;
+    ofstream out;
+    out.open("/users/mahmut/Desktop/outputTemp.txt");
     while(dfs(start,sink,&v)){
         // because the flow will always be one
         // no bactracking needed
         flow++;
+        while(v.size()>0){
+            Vertex *temp = v.top();
+            out<<temp->from->name<<"->"<<temp->to->name<<endl;
+            v.pop();
+        }
     }
+    out.close();
     return flow;
 }
