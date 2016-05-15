@@ -44,6 +44,8 @@ Vertex::Vertex(){
     weight = 0;
 }
 
+int fordFulkersen(Node *start, Node *sink);
+
 bool dfs(Node *start, Node *sink, stack<Vertex*> *v);
 
 int main(int argc, const char * argv[]) {
@@ -119,9 +121,8 @@ int main(int argc, const char * argv[]) {
                 robots[i]->vertices[0] = robotToSink;
                 robots[i]->vertexSize++;
             }
-            stack<Vertex *> v;
-            dfs(start, sink, &v);
-            cout<<"done"<<endl;
+            
+            cout<<endl<<"flow = " <<fordFulkersen(start, sink)<<endl;
         }
     }
     
@@ -155,7 +156,6 @@ bool dfs(Node * start, Node *sink, stack<Vertex *> *v){
             else{
                 if(v->size() > 0)
                     v->pop();
-                break;
             }
         }
     }
@@ -167,6 +167,9 @@ int fordFulkersen(Node *start, Node *sink){
     int pathFlow = INT_MAX;
     stack<Vertex*> v;
     while(dfs(start,sink,&v)){
-        
+        // because the flow will always be one
+        // no bactracking needed
+        flow++;
     }
+    return flow;
 }
