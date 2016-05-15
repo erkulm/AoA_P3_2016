@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stack>
 
 
 using namespace std;
@@ -32,13 +33,21 @@ public:
 
 Node::Node(){
     vertexSize = 0;
+    for (int i = 0; i < 20; i++) {
+        vertices[i] = NULL;
+    }
 }
 
 Vertex::Vertex(){
-    
+    from = NULL;
+    to = NULL;
+    weight = 0;
 }
 
+bool dfs(Node *start, Node *sink, stack<Vertex*> *v);
+
 int main(int argc, const char * argv[]) {
+    stack<Vertex> v;
     int graph[20][20]; //shows the edges: if a value is NULL then there is no adge between the nodes else the integer value represents the flow variable
     int numberOfRobots;
     int numberOfObjects;
@@ -53,7 +62,9 @@ int main(int argc, const char * argv[]) {
     }
     if (in.is_open()) {
         Node *start = new Node();
+        start->name = "start";
         Node *sink = new Node();
+        sink->name = "sink";
         in >> numberOfObjects;
         in >> numberOfRobots;
         Node *objects[20];
@@ -63,13 +74,17 @@ int main(int argc, const char * argv[]) {
                 for (int j = 0; j <numberOfRobots; j++) {
                     int temp;
                     in >> temp;
-                    if (graph[i][j] == NULL && temp == 1) {
+                    cout<<temp<<"   ";
+                    if (temp == 1) {
                         
                         
                         graph[i][j] = 1;
                         // a new vertex from start node to the ith node
-                        objects[i] = new Node();
-                        objects[i]->name = "object_" + new string(i);
+                        if (objects[i] == NULL) {
+                            objects[i] = new Node();
+                            objects[i]->name = "object_" + to_string(i);
+                        }
+                        
                         Vertex *tempVertex = new Vertex();
                         tempVertex->from = start;
                         tempVertex->to = objects[i];
@@ -79,8 +94,11 @@ int main(int argc, const char * argv[]) {
                         
                         
                         // a new vertex from ith node to the jth robot;
-                        
-                        robots[j] = new Node();
+                        if (robots[j] == NULL) {
+                            robots[j] = new Node();
+                            robots[j]->name = "robot_" + to_string(j);
+                        }
+    
                         Vertex *objectToRobot = new Vertex();
                         objectToRobot->from = objects[i];
                         objectToRobot->to = robots[j];
@@ -88,11 +106,22 @@ int main(int argc, const char * argv[]) {
                         objects[i]->vertices[objects[i]->vertexSize] = objectToRobot;
                         objects[i]->vertexSize++;
                         
-                    } else if(temp == 1){
-                        graph[i][j]++;
                     }
                 }
             }
+            for (int i=0; i<numberOfRobots; i++) {
+                int weight;
+                in>>weight;
+                Vertex *robotToSink = new Vertex();
+                robotToSink->from = robots[i];
+                robotToSink->to = sink;
+                robotToSink->weight = weight;
+                robots[i]->vertices[0] = robotToSink;
+                robots[i]->vertexSize++;
+            }
+            stack<Vertex *> v;
+            dfs(start, sink, &v);
+            cout<<"done"<<endl;
         }
     }
     
@@ -103,4 +132,41 @@ int main(int argc, const char * argv[]) {
     }
     
     return 0;
+}
+
+bool dfs(Node * start, Node *sink, stack<Vertex *> *v){
+    if (start == NULL) {
+        throw "Start Node Can't be Null";
+    }
+    else{
+        if (start == sink) {
+            return true;
+        }
+        for (int i = 0; i<20; i++) {
+            if (start->vertices[i] != NULL && start->vertices[i]->weight > 0) {
+                start->vertices[i]->weight--;
+                v->push(start->vertices[i]);
+                bool temp;
+                temp = dfs(start->vertices[i]->to, sink, v);
+                if (temp == true) {
+                    return true;
+                }
+            }
+            else{
+                if(v->size() > 0)
+                    v->pop();
+                break;
+            }
+        }
+    }
+    return false;
+}
+
+int fordFulkersen(Node *start, Node *sink){
+    int flow = 0;
+    int pathFlow = INT_MAX;
+    stack<Vertex*> v;
+    while(dfs(start,sink,&v)){
+        
+    }
 }
