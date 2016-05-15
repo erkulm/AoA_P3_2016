@@ -11,6 +11,7 @@
 #include <string>
 #include <stack>
 
+const int MAX_SIZE = 20;
 
 using namespace std;
 
@@ -19,7 +20,7 @@ class Node{
 public:
     string name;
     int vertexSize;
-    Vertex *vertices[20];
+    Vertex *vertices[MAX_SIZE];
     Node();
 };
 
@@ -33,7 +34,7 @@ public:
 
 Node::Node(){
     vertexSize = 0;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < MAX_SIZE; i++) {
         vertices[i] = NULL;
     }
 }
@@ -50,15 +51,15 @@ bool dfs(Node *start, Node *sink, stack<Vertex*> *v);
 
 int main(int argc, const char * argv[]) {
     stack<Vertex> v;
-    int graph[20][20]; //shows the edges: if a value is NULL then there is no adge between the nodes else the integer value represents the flow variable
+    int graph[MAX_SIZE][MAX_SIZE]; //shows the edges: if a value is NULL then there is no adge between the nodes else the integer value represents the flow variable
     int numberOfRobots;
     int numberOfObjects;
     ifstream in;
     in.open("/users/mahmut/Downloads/input.txt");
     int a;
     int j;
-    for (a = 0; a < 20; a++) {
-        for (j = 0; j < 20; j++) {
+    for (a = 0; a < MAX_SIZE; a++) {
+        for (j = 0; j < MAX_SIZE; j++) {
             graph[a][j] = NULL;
         }
     }
@@ -69,9 +70,9 @@ int main(int argc, const char * argv[]) {
         sink->name = "sink";
         in >> numberOfObjects;
         in >> numberOfRobots;
-        Node *objects[20];
-        Node *robots[20];
-        if (numberOfObjects < 20 && numberOfRobots < 20) {
+        Node *objects[MAX_SIZE];
+        Node *robots[MAX_SIZE];
+        if (numberOfObjects < MAX_SIZE && numberOfRobots < MAX_SIZE) {
             for (int i = 0; i < numberOfObjects; i++) {
                 for (int j = 0; j <numberOfRobots; j++) {
                     int temp;
@@ -121,8 +122,15 @@ int main(int argc, const char * argv[]) {
                 robots[i]->vertices[0] = robotToSink;
                 robots[i]->vertexSize++;
             }
-            
-            cout<<endl<<"flow = " <<fordFulkersen(start, sink)<<endl;
+            int flow = fordFulkersen(start, sink);
+            cout<<endl<<"flow = " <<flow<<endl;
+            if (flow<numberOfObjects) {
+                cerr<<"No viable option is found!"<<endl;
+                ofstream out;
+                out.open("/users/mahmut/desktop/outputTemp.txt");
+                out <<"No viable option is found!"<<endl;
+                out.close();
+            }
         }
     }
     
@@ -143,7 +151,7 @@ bool dfs(Node * start, Node *sink, stack<Vertex *> *v){
         if (start == sink) {
             return true;
         }
-        for (int i = 0; i<20; i++) {
+        for (int i = 0; i<MAX_SIZE; i++) {
             if (start->vertices[i] != NULL && start->vertices[i]->weight > 0) {
                 start->vertices[i]->weight--;
                 v->push(start->vertices[i]);
@@ -153,10 +161,10 @@ bool dfs(Node * start, Node *sink, stack<Vertex *> *v){
                     return true;
                 }
             }
-            else{
-                if(v->size() > 0)
+            else if (start->vertices[i] == NULL)
+                break;
+            else if(v->size() > 0)
                     v->pop();
-            }
         }
     }
     return false;
@@ -169,12 +177,19 @@ int fordFulkersen(Node *start, Node *sink){
     ofstream out;
     out.open("/users/mahmut/Desktop/outputTemp.txt");
     while(dfs(start,sink,&v)){
-        // because the flow will always be one
-        // no bactracking needed
+        // the path_flow will always be one
+        // because an object can be carried by only one robot
         flow++;
         while(v.size()>0){
+            // updating the residual graph
+            // printing out vertices in the graph
             Vertex *temp = v.top();
             out<<temp->from->name<<"->"<<temp->to->name<<endl;
+            Vertex *newVertex = new  Vertex();
+            newVertex->from = temp->to;
+            newVertex->to = temp->from;
+            newVertex->weight = 1;
+            temp->from->vertices[temp->from->vertexSize++] = newVertex;
             v.pop();
         }
     }
